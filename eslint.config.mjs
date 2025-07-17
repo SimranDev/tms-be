@@ -28,7 +28,15 @@ export default tseslint.config(
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-floating-promises': 'warn',
-      '@typescript-eslint/no-unsafe-argument': 'warn'
+      '@typescript-eslint/no-unsafe-argument': 'warn',
+      // Allow leading underscores:
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          argsIgnorePattern: '^_', // Ignores arguments that start with an underscore
+          varsIgnorePattern: '^_', // Ignores variables that start with an underscore
+        },
+      ],
     },
   },
 );
