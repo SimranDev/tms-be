@@ -20,7 +20,6 @@ model User {
   lastname    String
   email       String   @unique
   password    String
-  role        Role
   createdAt   DateTime @default(now())
   jobsCreated Job[]    @relation("CreatedJobs")
 }
@@ -96,21 +95,6 @@ model Job {
   driver        Driver    @relation(fields: [driverId], references: [id])
   vehicle       Vehicle   @relation(fields: [vehicleId], references: [id])
   createdByUser User      @relation("CreatedJobs", fields: [createdByUserId], references: [id])
-}
-
-model Invitation {
-  id        String   @id @default(cuid())
-  email     String
-  role      Role?
-  isDriver  Boolean  @default(false)
-  token     String   @unique
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-}
-
-enum Role {
-  admin
-  dispatcher
 }
 
 enum VehicleType {
