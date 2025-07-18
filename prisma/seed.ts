@@ -1,4 +1,10 @@
-import { PrismaClient, VehicleType } from '../generated/prisma';
+import {
+  PrismaClient,
+  VehicleType,
+  ContainerType,
+  ContainerSize,
+  ContainerStatus,
+} from '../generated/prisma';
 import { faker } from '@faker-js/faker';
 import * as bcrypt from 'bcrypt';
 
@@ -20,6 +26,7 @@ async function main() {
   await prisma.user.deleteMany();
   await prisma.driver.deleteMany();
   await prisma.vehicle.deleteMany();
+  await prisma.container.deleteMany();
 
   // Create 3 Users
   console.log('👥 Creating 3 users...');
@@ -142,12 +149,53 @@ async function main() {
 
   console.log(`✅ Created ${vehicles.length} vehicles`);
 
+  // Create 14 Containers
+  console.log('📦 Creating 14 containers...');
+  const containerTypes = [
+    ContainerType.Dry,
+    ContainerType.Reefer,
+    ContainerType.OpenTop,
+  ];
+
+  const containerSizes = [
+    ContainerSize.S20ft,
+    ContainerSize.S40ft,
+    ContainerSize.S45ft,
+  ];
+
+  const containerStatuses = [
+    ContainerStatus.InYard,
+    ContainerStatus.InTransit,
+    ContainerStatus.WithCustomer,
+  ];
+
+  const containers: any[] = [];
+
+  for (let i = 0; i < 14; i++) {
+    const container = await prisma.container.create({
+      data: {
+        containerNumber: `CON${faker.string.alphanumeric({
+          length: 7,
+          casing: 'upper',
+        })}`, // Generate container number like CON1234567
+        type: faker.helpers.arrayElement(containerTypes),
+        size: faker.helpers.arrayElement(containerSizes),
+        status: faker.helpers.arrayElement(containerStatuses),
+        notes: faker.datatype.boolean(0.3) ? faker.lorem.sentence() : null, // 30% chance of having notes
+      },
+    });
+    containers.push(container);
+  }
+
+  console.log(`✅ Created ${containers.length} containers`);
+
   // Display summary
   console.log('\n📊 Seed Summary:');
   console.log('================');
   console.log(`👥 Users: ${users.length}`);
   console.log(`🚛 Drivers: ${drivers.length}`);
   console.log(`🚗 Vehicles: ${vehicles.length}`);
+  console.log(`📦 Containers: ${containers.length}`);
 
   console.log('\n🔑 Login Credentials:');
   console.log('====================');
