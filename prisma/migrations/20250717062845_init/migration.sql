@@ -1,7 +1,4 @@
 -- CreateEnum
-CREATE TYPE "Role" AS ENUM ('admin', 'dispatcher');
-
--- CreateEnum
 CREATE TYPE "VehicleType" AS ENUM ('Tractor', 'Trailer', 'Van', 'Flatbed');
 
 -- CreateEnum
@@ -23,7 +20,6 @@ CREATE TABLE "User" (
     "lastname" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "password" TEXT NOT NULL,
-    "role" "Role" NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
@@ -107,19 +103,6 @@ CREATE TABLE "Job" (
     CONSTRAINT "Job_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
-CREATE TABLE "Invitation" (
-    "id" TEXT NOT NULL,
-    "email" TEXT NOT NULL,
-    "role" "Role",
-    "isDriver" BOOLEAN NOT NULL DEFAULT false,
-    "token" TEXT NOT NULL,
-    "expiresAt" TIMESTAMP(3) NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "Invitation_pkey" PRIMARY KEY ("id")
-);
-
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
@@ -137,9 +120,6 @@ CREATE UNIQUE INDEX "Vehicle_vinNumber_key" ON "Vehicle"("vinNumber");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Container_containerNumber_key" ON "Container"("containerNumber");
-
--- CreateIndex
-CREATE UNIQUE INDEX "Invitation_token_key" ON "Invitation"("token");
 
 -- AddForeignKey
 ALTER TABLE "Job" ADD CONSTRAINT "Job_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "Customer"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
