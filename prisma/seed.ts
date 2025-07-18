@@ -1,4 +1,4 @@
-import { PrismaClient } from '../generated/prisma';
+import { PrismaClient, VehicleType } from '../generated/prisma';
 import { faker } from '@faker-js/faker';
 import * as bcrypt from 'bcrypt';
 
@@ -19,6 +19,7 @@ async function main() {
   console.log('🧹 Cleaning existing data...');
   await prisma.user.deleteMany();
   await prisma.driver.deleteMany();
+  await prisma.vehicle.deleteMany();
 
   // Create 3 Users
   console.log('👥 Creating 3 users...');
@@ -81,11 +82,72 @@ async function main() {
 
   console.log(`✅ Created ${drivers.length} drivers`);
 
+  // Create 12 Vehicles
+  console.log('🚗 Creating 12 vehicles...');
+  const vehicleTypes = [
+    VehicleType.Tractor,
+    VehicleType.Trailer,
+    VehicleType.Van,
+    VehicleType.Flatbed,
+  ];
+
+  // Truck manufacturers and models for commercial vehicles
+  const truckManufacturers = [
+    'Kenworth',
+    'Peterbilt',
+    'Freightliner',
+    'Volvo',
+    'Mack',
+    'International',
+    'Western Star',
+    'Ford',
+    'Chevrolet',
+    'Isuzu',
+  ];
+
+  const truckModels = {
+    Tractor: ['T680', 'T880', 'W900', '579', 'VNL', 'Anthem', '4700', '5700'],
+    Trailer: ['Dry Van', 'Flatbed', 'Reefer', 'Tanker', 'Lowboy', 'Container'],
+    Van: ['Transit', 'Sprinter', 'ProMaster', 'Express', 'Savana', 'NV200'],
+    Flatbed: ['Steel Deck', 'Aluminum Deck', 'Drop Deck', 'Step Deck', 'RGN'],
+  };
+
+  const vehicles: any[] = [];
+
+  for (let i = 0; i < 12; i++) {
+    const vehicleType = faker.helpers.arrayElement(vehicleTypes);
+    const manufacturer = faker.helpers.arrayElement(truckManufacturers);
+    const model = faker.helpers.arrayElement(truckModels[vehicleType]);
+
+    const vehicle = await prisma.vehicle.create({
+      data: {
+        name: `${manufacturer} ${model}`,
+        rego: faker.vehicle.vin().substring(0, 8).toUpperCase(), // Generate registration number
+        vinNumber: faker.vehicle.vin(),
+        type: vehicleType,
+        capacityKg: faker.number.int({ min: 1000, max: 40000 }), // Capacity between 1-40 tons
+        registrationExpiry: faker.date.between({
+          from: new Date(),
+          to: new Date(new Date().setFullYear(new Date().getFullYear() + 2)), // Expires within 2 years
+        }),
+        insuranceExpiry: faker.date.between({
+          from: new Date(),
+          to: new Date(new Date().setFullYear(new Date().getFullYear() + 1)), // Expires within 1 year
+        }),
+        isActive: faker.datatype.boolean(0.95), // 90% chance of being active
+      },
+    });
+    vehicles.push(vehicle);
+  }
+
+  console.log(`✅ Created ${vehicles.length} vehicles`);
+
   // Display summary
   console.log('\n📊 Seed Summary:');
   console.log('================');
   console.log(`👥 Users: ${users.length}`);
   console.log(`🚛 Drivers: ${drivers.length}`);
+  console.log(`🚗 Vehicles: ${vehicles.length}`);
 
   console.log('\n🔑 Login Credentials:');
   console.log('====================');
