@@ -12,7 +12,7 @@ import {
 import { JobService } from './job.service';
 import { CreateJobDto } from './dto/create-job.dto';
 import { UserJwtAuthGuard } from '../auth/user-auth/guards/user-jwt-auth.guard';
-import { JobStatus } from 'generated/prisma';
+import { JobStatus } from '@prisma/client';
 
 @Controller('jobs')
 @UseGuards(UserJwtAuthGuard)

@@ -1,7 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../../prisma/prisma.service';
-import { Driver } from 'generated/prisma';
+import { Driver } from '@prisma/client';
 import { DriverLoginDto } from './dto/driver-login.dto';
 import { CreateDriverDto } from './dto/create-driver.dto';
 import * as bcrypt from 'bcrypt';

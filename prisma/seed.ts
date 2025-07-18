@@ -9,7 +9,8 @@ import {
   Container,
   Driver,
   Vehicle,
-} from 'generated/prisma';
+} from '@prisma/client';
+
 import { faker } from '@faker-js/faker';
 import * as bcrypt from 'bcrypt';
 

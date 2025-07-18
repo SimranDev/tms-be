@@ -1,8 +1,4 @@
-import {
-  ContainerType,
-  ContainerSize,
-  ContainerStatus,
-} from 'generated/prisma';
+import { ContainerType, ContainerSize, ContainerStatus } from '@prisma/client';
 import { IsString, IsNotEmpty, IsEnum, IsOptional } from 'class-validator';
 
 export class CreateContainerDto {

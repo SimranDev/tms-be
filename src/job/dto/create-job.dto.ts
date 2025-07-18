@@ -1,4 +1,4 @@
-import { JobStatus } from 'generated/prisma';
+import { JobStatus } from '@prisma/client';
 import {
   IsString,
   IsNotEmpty,
