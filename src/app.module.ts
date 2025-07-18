@@ -4,6 +4,10 @@ import { UserModule } from './user/user.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { DriverModule } from './driver/driver.module';
 import { AuthModule } from './auth/auth.module';
+import { VehicleModule } from './vehicle/vehicle.module';
+import { ContainerModule } from './container/container.module';
+import { JobModule } from './job/job.module';
+import { CustomerModule } from './customer/customer.module';
 
 @Module({
   imports: [
@@ -13,7 +17,11 @@ import { AuthModule } from './auth/auth.module';
     PrismaModule,
     AuthModule,
     UserModule,
+    CustomerModule,
     DriverModule,
+    VehicleModule,
+    ContainerModule,
+    JobModule,
   ],
   controllers: [],
   providers: [],

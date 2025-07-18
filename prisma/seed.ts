@@ -4,7 +4,12 @@ import {
   ContainerType,
   ContainerSize,
   ContainerStatus,
-} from '../generated/prisma';
+  JobStatus,
+  Customer,
+  Container,
+  Driver,
+  Vehicle,
+} from 'generated/prisma';
 import { faker } from '@faker-js/faker';
 import * as bcrypt from 'bcrypt';
 
@@ -23,6 +28,8 @@ async function main() {
 
   // Clear existing data (optional - remove if you want to keep existing data)
   console.log('🧹 Cleaning existing data...');
+  await prisma.job.deleteMany();
+  await prisma.customer.deleteMany();
   await prisma.user.deleteMany();
   await prisma.driver.deleteMany();
   await prisma.vehicle.deleteMany();
@@ -61,7 +68,7 @@ async function main() {
 
   // Create 15 Drivers
   console.log('🚛 Creating 15 drivers...');
-  const drivers: any[] = [];
+  const drivers: Driver[] = [];
 
   for (let i = 0; i < 15; i++) {
     const driver = await prisma.driver.create({
@@ -119,7 +126,7 @@ async function main() {
     Flatbed: ['Steel Deck', 'Aluminum Deck', 'Drop Deck', 'Step Deck', 'RGN'],
   };
 
-  const vehicles: any[] = [];
+  const vehicles: Vehicle[] = [];
 
   for (let i = 0; i < 12; i++) {
     const vehicleType = faker.helpers.arrayElement(vehicleTypes);
@@ -169,7 +176,7 @@ async function main() {
     ContainerStatus.WithCustomer,
   ];
 
-  const containers: any[] = [];
+  const containers: Container[] = [];
 
   for (let i = 0; i < 14; i++) {
     const container = await prisma.container.create({
@@ -189,13 +196,176 @@ async function main() {
 
   console.log(`✅ Created ${containers.length} containers`);
 
+  // Create 5 Customers (Australian-based)
+  console.log('🏢 Creating 5 customers with Australian addresses...');
+  const australianCities = [
+    { city: 'Sydney', state: 'NSW', postcode: '2000' },
+    { city: 'Melbourne', state: 'VIC', postcode: '3000' },
+    { city: 'Brisbane', state: 'QLD', postcode: '4000' },
+    { city: 'Perth', state: 'WA', postcode: '6000' },
+    { city: 'Adelaide', state: 'SA', postcode: '5000' },
+  ];
+
+  const customers: Customer[] = [];
+
+  for (let i = 0; i < 5; i++) {
+    const cityInfo = australianCities[i];
+    const streetNumber = faker.number.int({ min: 1, max: 999 });
+    const streetName = faker.location.street();
+
+    const customer = await prisma.customer.create({
+      data: {
+        companyName: faker.company.name(),
+        contactPerson: `${faker.person.firstName()} ${faker.person.lastName()}`,
+        email: faker.internet.email(),
+        phoneNumber: `+61 ${faker.number.int({ min: 2, max: 9 })}${faker.number.int({ min: 1000, max: 9999 })}${faker.number.int({ min: 1000, max: 9999 })}`,
+        address: `${streetNumber} ${streetName}, ${cityInfo.city} ${cityInfo.state} ${cityInfo.postcode}, Australia`,
+      },
+    });
+    customers.push(customer);
+  }
+
+  console.log(`✅ Created ${customers.length} customers`);
+
+  // Create 16 Jobs with Relations
+  console.log('📋 Creating 16 jobs with relations...');
+  const jobStatuses = [
+    JobStatus.Booked,
+    JobStatus.Assigned,
+    JobStatus.InProgress,
+    JobStatus.Completed,
+  ];
+
+  const freightDescriptions = [
+    'Electronic equipment and components',
+    'Automotive parts and accessories',
+    'Food and beverage products',
+    'Textiles and clothing materials',
+    'Construction materials and tools',
+    'Medical supplies and equipment',
+    'Furniture and home appliances',
+    'Paper products and packaging',
+    'Industrial machinery parts',
+    'Chemical products (non-hazardous)',
+    'Consumer goods and retail items',
+    'Agricultural products and supplies',
+    'Mining equipment and supplies',
+    'Pharmaceutical products',
+    'IT and telecommunications equipment',
+    'Sporting goods and recreation equipment',
+  ];
+
+  // Australian cities for pickup/delivery addresses
+  const australianLocations = [
+    { city: 'Sydney', state: 'NSW' },
+    { city: 'Melbourne', state: 'VIC' },
+    { city: 'Brisbane', state: 'QLD' },
+    { city: 'Perth', state: 'WA' },
+    { city: 'Adelaide', state: 'SA' },
+    { city: 'Newcastle', state: 'NSW' },
+    { city: 'Gold Coast', state: 'QLD' },
+    { city: 'Canberra', state: 'ACT' },
+    { city: 'Wollongong', state: 'NSW' },
+    { city: 'Geelong', state: 'VIC' },
+    { city: 'Townsville', state: 'QLD' },
+    { city: 'Cairns', state: 'QLD' },
+  ];
+
+  const jobs: any[] = [];
+
+  for (let i = 0; i < 16; i++) {
+    // Select random related entities
+
+    const randomCustomer = faker.helpers.arrayElement(customers);
+    const randomContainer = faker.helpers.arrayElement(containers);
+    const randomDriver = faker.helpers.arrayElement(drivers);
+    const randomVehicle = faker.helpers.arrayElement(vehicles);
+    const randomUser = faker.helpers.arrayElement(users);
+    const randomStatus = faker.helpers.arrayElement(jobStatuses);
+
+    // Generate realistic pickup and delivery addresses in Australia
+    const pickupLocation = faker.helpers.arrayElement(australianLocations);
+    const deliveryLocation = faker.helpers.arrayElement(
+      australianLocations.filter((loc) => loc.city !== pickupLocation.city),
+    );
+
+    const pickupStreetNumber = faker.number.int({ min: 1, max: 999 });
+    const pickupStreetName = faker.location.street();
+    const pickupPostcode = faker.number.int({ min: 1000, max: 9999 });
+
+    const deliveryStreetNumber = faker.number.int({ min: 1, max: 999 });
+    const deliveryStreetName = faker.location.street();
+    const deliveryPostcode = faker.number.int({ min: 1000, max: 9999 });
+
+    // Generate realistic dates
+    const baseDate = faker.date.between({
+      from: new Date(new Date().setDate(new Date().getDate() - 10)), // 10 days ago
+      to: new Date(new Date().setDate(new Date().getDate() + 20)), // 20 days from now
+    });
+
+    const scheduledPickup = new Date(baseDate);
+
+    const scheduledDelivery = new Date(scheduledPickup);
+    scheduledDelivery.setHours(
+      scheduledDelivery.getHours() + faker.number.int({ min: 6, max: 96 }),
+    ); // 6-96 hours after pickup (1-4 days for Australian interstate)
+
+    // Generate actual dates based on job status
+    let actualPickup: Date | null = null;
+    let actualDelivery: Date | null = null;
+
+    if (
+      randomStatus === JobStatus.InProgress ||
+      randomStatus === JobStatus.Completed
+    ) {
+      // For in-progress or completed jobs, set actual pickup
+      actualPickup = faker.date.between({
+        from: scheduledPickup,
+        to: new Date(scheduledPickup.getTime() + 8 * 60 * 60 * 1000), // Within 8 hours of scheduled
+      });
+    }
+
+    if (randomStatus === JobStatus.Completed) {
+      // For completed jobs, set actual delivery
+      const deliveryStart = actualPickup || scheduledDelivery;
+      actualDelivery = faker.date.between({
+        from: deliveryStart,
+        to: new Date(deliveryStart.getTime() + 24 * 60 * 60 * 1000), // Within 24 hours of actual pickup or scheduled delivery
+      });
+    }
+
+    const job = await prisma.job.create({
+      data: {
+        customerId: randomCustomer.id,
+        containerId: randomContainer.id,
+        driverId: randomDriver.id,
+        vehicleId: randomVehicle.id,
+        status: randomStatus,
+        pickupAddress: `${pickupStreetNumber} ${pickupStreetName}, ${pickupLocation.city} ${pickupLocation.state} ${pickupPostcode}, Australia`,
+        deliveryAddress: `${deliveryStreetNumber} ${deliveryStreetName}, ${deliveryLocation.city} ${deliveryLocation.state} ${deliveryPostcode}, Australia`,
+        scheduledPickup,
+        scheduledDelivery,
+        actualPickup,
+        actualDelivery,
+        freightDescription: faker.helpers.arrayElement(freightDescriptions),
+        notes: faker.datatype.boolean(0.4) ? faker.lorem.sentences(2) : null, // 40% chance of notes
+        createdByUserId: randomUser.id,
+      },
+    });
+    jobs.push(job);
+  }
+
+  console.log(`✅ Created ${jobs.length} jobs`);
+
   // Display summary
   console.log('\n📊 Seed Summary:');
   console.log('================');
   console.log(`👥 Users: ${users.length}`);
+  console.log(`🏢 Customers: ${customers.length}`);
   console.log(`🚛 Drivers: ${drivers.length}`);
   console.log(`🚗 Vehicles: ${vehicles.length}`);
   console.log(`📦 Containers: ${containers.length}`);
+  console.log(`📋 Jobs: ${jobs.length}`);
 
   console.log('\n🔑 Login Credentials:');
   console.log('====================');
