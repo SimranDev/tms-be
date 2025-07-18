@@ -52,7 +52,7 @@ model Driver {
 model Vehicle {
   id                 String      @id @default(cuid())
   name               String
-  licensePlate       String      @unique
+  rego               String      @unique
   vinNumber          String      @unique
   type               VehicleType
   capacityKg         Int
