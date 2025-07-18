@@ -14,7 +14,7 @@ export interface JwtPayload {
 
 export interface UserAuthResponse {
   user: Omit<User, 'password'>;
-  access_token: string;
+  accessToken: string;
 }
 
 @Injectable()
@@ -104,11 +104,11 @@ export class UserAuthService {
       email: user.email,
       type: 'user',
     };
-    const access_token = this.jwtService.sign(payload);
+    const accessToken = this.jwtService.sign(payload);
 
     return {
       user,
-      access_token,
+      accessToken,
     };
   }
 
@@ -125,11 +125,11 @@ export class UserAuthService {
       email: user.email,
       type: 'user',
     };
-    const access_token = this.jwtService.sign(payload);
+    const accessToken = this.jwtService.sign(payload);
 
     return {
       user,
-      access_token,
+      accessToken,
     };
   }
 
