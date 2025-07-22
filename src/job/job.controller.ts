@@ -13,6 +13,7 @@ import { JobService } from './job.service';
 import { CreateJobDto } from './dto/create-job.dto';
 import { UserJwtAuthGuard } from '../auth/user-auth/guards/user-jwt-auth.guard';
 import { JobStatus } from '@prisma/client';
+import { GetUser, RequestUser } from '../auth/decorators/get-user.decorator';
 
 @Controller('jobs')
 @UseGuards(UserJwtAuthGuard)
@@ -20,12 +21,15 @@ export class JobController {
   constructor(private readonly jobService: JobService) {}
 
   @Post()
-  async createJob(@Body() createJobDto: CreateJobDto) {
-    return this.jobService.createJob(createJobDto);
+  async createJob(
+    @Body() createJobDto: CreateJobDto,
+    @GetUser() user: RequestUser,
+  ) {
+    return this.jobService.createJob(createJobDto, user.id);
   }
 
   @Get(':id')
-  async findJobById(@Param('id') id: string) {
+  async findJobById(@Param('id') id: number) {
     return this.jobService.findJobById(id);
   }
 
@@ -45,14 +49,14 @@ export class JobController {
 
   @Put(':id')
   async updateJob(
-    @Param('id') id: string,
+    @Param('id') id: number,
     @Body() updateJobDto: Partial<CreateJobDto>,
   ) {
     return this.jobService.updateJob(id, updateJobDto);
   }
 
   @Delete(':id')
-  async deleteJob(@Param('id') id: string) {
+  async deleteJob(@Param('id') id: number) {
     return this.jobService.deleteJob(id);
   }
 }

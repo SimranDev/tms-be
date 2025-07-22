@@ -7,10 +7,11 @@ import { JobStatus } from '@prisma/client';
 export class JobService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async createJob(createJobDto: CreateJobDto) {
+  async createJob(createJobDto: CreateJobDto, createdByUserId: string) {
     return this.prisma.job.create({
       data: {
         ...createJobDto,
+        createdByUserId,
         scheduledPickup: new Date(createJobDto.scheduledPickup),
         scheduledDelivery: new Date(createJobDto.scheduledDelivery),
         actualPickup: createJobDto.actualPickup
@@ -20,24 +21,24 @@ export class JobService {
           ? new Date(createJobDto.actualDelivery)
           : null,
       },
-      include: {
-        customer: true,
-        container: true,
-        driver: true,
-        vehicle: true,
-        createdByUser: {
-          select: {
-            id: true,
-            firstname: true,
-            lastname: true,
-            email: true,
-          },
-        },
-      },
+      // include: {
+      //   customer: true,
+      //   container: true,
+      //   driver: true,
+      //   vehicle: true,
+      //   createdByUser: {
+      //     select: {
+      //       id: true,
+      //       firstname: true,
+      //       lastname: true,
+      //       email: true,
+      //     },
+      //   },
+      // },
     });
   }
 
-  async findJobById(id: string) {
+  async findJobById(id: number) {
     return this.prisma.job.findUnique({
       where: { id },
       include: {
@@ -79,7 +80,7 @@ export class JobService {
     });
   }
 
-  async updateJob(id: string, updateJobDto: Partial<CreateJobDto>) {
+  async updateJob(id: number, updateJobDto: Partial<CreateJobDto>) {
     const updateData: Record<string, any> = { ...updateJobDto };
 
     // Convert date strings to Date objects if provided
@@ -118,7 +119,7 @@ export class JobService {
     });
   }
 
-  async deleteJob(id: string) {
+  async deleteJob(id: number) {
     return this.prisma.job.delete({
       where: { id },
     });
