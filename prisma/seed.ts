@@ -142,11 +142,11 @@ async function main() {
         type: vehicleType,
         capacityKg: faker.number.int({ min: 1000, max: 40000 }), // Capacity between 1-40 tons
         registrationExpiry: faker.date.between({
-          from: new Date(),
+          from: new Date(new Date().setMonth(new Date().getMonth() - 2)),
           to: new Date(new Date().setFullYear(new Date().getFullYear() + 2)), // Expires within 2 years
         }),
         insuranceExpiry: faker.date.between({
-          from: new Date(),
+          from: new Date(new Date().setMonth(new Date().getMonth() - 2)),
           to: new Date(new Date().setFullYear(new Date().getFullYear() + 1)), // Expires within 1 year
         }),
         isActive: faker.datatype.boolean(0.95), // 90% chance of being active
@@ -258,18 +258,18 @@ async function main() {
 
   // Australian cities for pickup/delivery addresses
   const australianLocations = [
-    { city: 'Sydney', state: 'NSW' },
-    { city: 'Melbourne', state: 'VIC' },
-    { city: 'Brisbane', state: 'QLD' },
-    { city: 'Perth', state: 'WA' },
-    { city: 'Adelaide', state: 'SA' },
-    { city: 'Newcastle', state: 'NSW' },
-    { city: 'Gold Coast', state: 'QLD' },
-    { city: 'Canberra', state: 'ACT' },
-    { city: 'Wollongong', state: 'NSW' },
-    { city: 'Geelong', state: 'VIC' },
-    { city: 'Townsville', state: 'QLD' },
-    { city: 'Cairns', state: 'QLD' },
+    { city: 'Sydney', state: 'NSW', lat: -33.8688, lng: 151.2093 },
+    { city: 'Melbourne', state: 'VIC', lat: -37.8136, lng: 144.9631 },
+    { city: 'Brisbane', state: 'QLD', lat: -27.4698, lng: 153.0251 },
+    { city: 'Perth', state: 'WA', lat: -31.9505, lng: 115.8605 },
+    { city: 'Adelaide', state: 'SA', lat: -34.9285, lng: 138.6007 },
+    { city: 'Newcastle', state: 'NSW', lat: -32.9283, lng: 151.7817 },
+    { city: 'Gold Coast', state: 'QLD', lat: -28.0167, lng: 153.4 },
+    { city: 'Canberra', state: 'ACT', lat: -35.2809, lng: 149.13 },
+    { city: 'Wollongong', state: 'NSW', lat: -34.4244, lng: 150.8931 },
+    { city: 'Geelong', state: 'VIC', lat: -38.1499, lng: 144.3617 },
+    { city: 'Townsville', state: 'QLD', lat: -19.259, lng: 146.8169 },
+    { city: 'Cairns', state: 'QLD', lat: -16.9186, lng: 145.7781 },
   ];
 
   const jobs: any[] = [];
@@ -297,6 +297,16 @@ async function main() {
     const deliveryStreetNumber = faker.number.int({ min: 1, max: 999 });
     const deliveryStreetName = faker.location.street();
     const deliveryPostcode = faker.number.int({ min: 1000, max: 9999 });
+
+    // Add some random variation to coordinates (within ~5km radius)
+    const pickupLatitude =
+      pickupLocation.lat + faker.number.float({ min: -0.05, max: 0.05 });
+    const pickupLongitude =
+      pickupLocation.lng + faker.number.float({ min: -0.05, max: 0.05 });
+    const deliveryLatitude =
+      deliveryLocation.lat + faker.number.float({ min: -0.05, max: 0.05 });
+    const deliveryLongitude =
+      deliveryLocation.lng + faker.number.float({ min: -0.05, max: 0.05 });
 
     // Generate realistic dates
     const baseDate = faker.date.between({
@@ -343,7 +353,11 @@ async function main() {
         vehicleId: randomVehicle.id,
         status: randomStatus,
         pickupAddress: `${pickupStreetNumber} ${pickupStreetName}, ${pickupLocation.city} ${pickupLocation.state} ${pickupPostcode}, Australia`,
+        pickupLatitude,
+        pickupLongitude,
         deliveryAddress: `${deliveryStreetNumber} ${deliveryStreetName}, ${deliveryLocation.city} ${deliveryLocation.state} ${deliveryPostcode}, Australia`,
+        deliveryLatitude,
+        deliveryLongitude,
         scheduledPickup,
         scheduledDelivery,
         actualPickup,

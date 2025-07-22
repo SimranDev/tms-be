@@ -67,14 +67,18 @@ model Container {
 }
 
 model Job {
-  id                 String    @id @default(cuid())
+  id                 Int       @id @default(autoincrement())
   customerId         String
   containerId        String
   driverId           String
   vehicleId          String
   status             JobStatus
   pickupAddress      String
+  pickupLatitude     Float
+  pickupLongitude    Float
   deliveryAddress    String
+  deliveryLatitude   Float
+  deliveryLongitude  Float
   scheduledPickup    DateTime
   scheduledDelivery  DateTime
   actualPickup       DateTime?
