@@ -1,6 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateJobDto } from './dto/create-job.dto';
+import { UpdateJobStatusDto } from './dto/update-job-status.dto';
 import { JobStatus } from '@prisma/client';
 
 @Injectable()
@@ -156,17 +161,66 @@ export class JobService {
         container: true,
         driver: true,
         vehicle: true,
-        createdByUser: {
-          select: {
-            id: true,
-            firstname: true,
-            lastname: true,
-            email: true,
-          },
-        },
       },
       orderBy: {
         createdAt: 'desc',
+      },
+    });
+  }
+
+  async findDriverJobById(jobId: number, driverId: string) {
+    const job = await this.prisma.job.findUnique({
+      where: { id: jobId },
+      include: {
+        customer: true,
+        container: true,
+        driver: true,
+        vehicle: true,
+      },
+    });
+
+    if (!job) {
+      throw new NotFoundException('Job not found');
+    }
+
+    if (job.driverId !== driverId) {
+      throw new ForbiddenException('You can only access your own jobs');
+    }
+
+    return job;
+  }
+
+  async updateJobStatus(
+    jobId: number,
+    driverId: string,
+    updateJobStatusDto: UpdateJobStatusDto,
+  ) {
+    // First verify the job exists and belongs to the driver
+    await this.findDriverJobById(jobId, driverId);
+
+    const updateData: Record<string, any> = {
+      status: updateJobStatusDto.status,
+    };
+
+    // Add optional fields if provided
+    if (updateJobStatusDto.actualPickup) {
+      updateData.actualPickup = new Date(updateJobStatusDto.actualPickup);
+    }
+    if (updateJobStatusDto.actualDelivery) {
+      updateData.actualDelivery = new Date(updateJobStatusDto.actualDelivery);
+    }
+    if (updateJobStatusDto.notes !== undefined) {
+      updateData.notes = updateJobStatusDto.notes;
+    }
+
+    return this.prisma.job.update({
+      where: { id: jobId },
+      data: updateData,
+      include: {
+        customer: true,
+        container: true,
+        driver: true,
+        vehicle: true,
       },
     });
   }
