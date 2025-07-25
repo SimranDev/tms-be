@@ -16,6 +16,13 @@ import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
+interface LocationData {
+  city: string;
+  state: string;
+  lat: number;
+  lng: number;
+}
+
 async function main() {
   console.log('🌱 Starting seed...');
 
@@ -67,10 +74,28 @@ async function main() {
 
   console.log(`✅ Created ${users.length} users`);
 
-  // Create 15 Drivers
-  console.log('🚛 Creating 15 drivers...');
+  // Create 15 Drivers + 1 specific driver (Sim)
+  console.log('🚛 Creating 16 drivers...');
   const drivers: Driver[] = [];
 
+  // Create the specific driver for Sim first
+  const simDriver = await prisma.driver.create({
+    data: {
+      firstname: 'Sim',
+      lastname: 'Driver',
+      email: 'sim.driver@tms.com',
+      phoneNumber: '+61 412 345 678',
+      password: hashedPasswords.driver,
+      licenseNumber: 'SIMDRV01',
+      licenseExpiryDate: new Date(
+        new Date().setFullYear(new Date().getFullYear() + 2),
+      ), // Expires in 2 years
+      isActive: true,
+    },
+  });
+  drivers.push(simDriver);
+
+  // Create 15 additional random drivers
   for (let i = 0; i < 15; i++) {
     const driver = await prisma.driver.create({
       data: {
@@ -256,10 +281,28 @@ async function main() {
     'Sporting goods and recreation equipment',
   ];
 
-  // Australian cities for pickup/delivery addresses
-  const australianLocations = [
+  // Melbourne metro areas for local jobs (80%)
+  const melbourneSuburbs: LocationData[] = [
+    { city: 'Melbourne CBD', state: 'VIC', lat: -37.8136, lng: 144.9631 },
+    { city: 'Richmond', state: 'VIC', lat: -37.8197, lng: 144.9969 },
+    { city: 'South Melbourne', state: 'VIC', lat: -37.8317, lng: 144.9606 },
+    { city: 'Port Melbourne', state: 'VIC', lat: -37.8407, lng: 144.9389 },
+    { city: 'Footscray', state: 'VIC', lat: -37.8014, lng: 144.9005 },
+    { city: 'Preston', state: 'VIC', lat: -37.7403, lng: 145.0031 },
+    { city: 'Clayton', state: 'VIC', lat: -37.9219, lng: 145.1219 },
+    { city: 'Box Hill', state: 'VIC', lat: -37.8197, lng: 145.1231 },
+    { city: 'Dandenong', state: 'VIC', lat: -37.9875, lng: 145.2142 },
+    { city: 'Springvale', state: 'VIC', lat: -37.9506, lng: 145.1506 },
+    { city: 'Frankston', state: 'VIC', lat: -38.1342, lng: 145.1231 },
+    { city: 'Geelong', state: 'VIC', lat: -38.1499, lng: 144.3617 },
+    { city: 'Ballarat', state: 'VIC', lat: -37.5622, lng: 143.8503 },
+    { city: 'Bendigo', state: 'VIC', lat: -36.757, lng: 144.2794 },
+    { city: 'Shepparton', state: 'VIC', lat: -36.3806, lng: 145.3928 },
+  ];
+
+  // Interstate cities for 20% of jobs
+  const interstateCities: LocationData[] = [
     { city: 'Sydney', state: 'NSW', lat: -33.8688, lng: 151.2093 },
-    { city: 'Melbourne', state: 'VIC', lat: -37.8136, lng: 144.9631 },
     { city: 'Brisbane', state: 'QLD', lat: -27.4698, lng: 153.0251 },
     { city: 'Perth', state: 'WA', lat: -31.9505, lng: 115.8605 },
     { city: 'Adelaide', state: 'SA', lat: -34.9285, lng: 138.6007 },
@@ -267,28 +310,49 @@ async function main() {
     { city: 'Gold Coast', state: 'QLD', lat: -28.0167, lng: 153.4 },
     { city: 'Canberra', state: 'ACT', lat: -35.2809, lng: 149.13 },
     { city: 'Wollongong', state: 'NSW', lat: -34.4244, lng: 150.8931 },
-    { city: 'Geelong', state: 'VIC', lat: -38.1499, lng: 144.3617 },
-    { city: 'Townsville', state: 'QLD', lat: -19.259, lng: 146.8169 },
-    { city: 'Cairns', state: 'QLD', lat: -16.9186, lng: 145.7781 },
   ];
 
   const jobs: any[] = [];
 
   for (let i = 0; i < 16; i++) {
     // Select random related entities
-
     const randomCustomer = faker.helpers.arrayElement(customers);
     const randomContainer = faker.helpers.arrayElement(containers);
-    const randomDriver = faker.helpers.arrayElement(drivers);
+
+    // Assign first 8 jobs to Sim driver, rest to random drivers
+    const assignedDriver =
+      i < 8 ? simDriver : faker.helpers.arrayElement(drivers);
+
     const randomVehicle = faker.helpers.arrayElement(vehicles);
     const randomUser = faker.helpers.arrayElement(users);
     const randomStatus = faker.helpers.arrayElement(jobStatuses);
 
     // Generate realistic pickup and delivery addresses in Australia
-    const pickupLocation = faker.helpers.arrayElement(australianLocations);
-    const deliveryLocation = faker.helpers.arrayElement(
-      australianLocations.filter((loc) => loc.city !== pickupLocation.city),
-    );
+    // 80% Melbourne local, 20% interstate
+    const isLocalJob = faker.datatype.boolean(0.8); // 80% chance of local job
+
+    let pickupLocation: LocationData, deliveryLocation: LocationData;
+
+    if (isLocalJob) {
+      // Local Melbourne job - both pickup and delivery in Melbourne metro
+      pickupLocation = faker.helpers.arrayElement(melbourneSuburbs);
+      deliveryLocation = faker.helpers.arrayElement(
+        melbourneSuburbs.filter((loc) => loc.city !== pickupLocation.city),
+      );
+    } else {
+      // Interstate job - one Melbourne, one interstate
+      const melbourneLocation = faker.helpers.arrayElement(melbourneSuburbs);
+      const interstateLocation = faker.helpers.arrayElement(interstateCities);
+
+      // Randomly decide if pickup or delivery is in Melbourne
+      if (faker.datatype.boolean()) {
+        pickupLocation = melbourneLocation;
+        deliveryLocation = interstateLocation;
+      } else {
+        pickupLocation = interstateLocation;
+        deliveryLocation = melbourneLocation;
+      }
+    }
 
     const pickupStreetNumber = faker.number.int({ min: 1, max: 999 });
     const pickupStreetName = faker.location.street();
@@ -349,7 +413,7 @@ async function main() {
       data: {
         customerId: randomCustomer.id,
         containerId: randomContainer.id,
-        driverId: randomDriver.id,
+        driverId: assignedDriver.id,
         vehicleId: randomVehicle.id,
         status: randomStatus,
         pickupAddress: `${pickupStreetNumber} ${pickupStreetName}, ${pickupLocation.city} ${pickupLocation.state} ${pickupPostcode}, Australia`,
@@ -385,9 +449,12 @@ async function main() {
   console.log('\n🔑 Login Credentials:');
   console.log('====================');
   console.log('Admin User:');
-  console.log('  Email: admin@tms.com');
+  console.log('  Email: sim.admin@tms.com');
   console.log('  Password: admin123');
-  console.log('\nOther Users & All Drivers:');
+  console.log('\nSim Driver:');
+  console.log('  Email: sim.driver@tms.com');
+  console.log('  Password: driver123');
+  console.log('\nOther Users & Drivers:');
   console.log('  Password: user123 (for users)');
   console.log('  Password: driver123 (for drivers)');
 
