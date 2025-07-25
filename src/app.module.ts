@@ -8,6 +8,7 @@ import { VehicleModule } from './vehicle/vehicle.module';
 import { ContainerModule } from './container/container.module';
 import { JobModule } from './job/job.module';
 import { CustomerModule } from './customer/customer.module';
+import { LocationModule } from './location/location.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { CustomerModule } from './customer/customer.module';
     VehicleModule,
     ContainerModule,
     JobModule,
+    LocationModule,
   ],
   controllers: [],
   providers: [],
