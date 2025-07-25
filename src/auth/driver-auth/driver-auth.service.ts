@@ -9,12 +9,11 @@ import * as bcrypt from 'bcrypt';
 export interface JwtPayload {
   sub: string;
   email: string;
-  type: 'user' | 'driver';
 }
 
 export interface DriverAuthResponse {
   driver: Omit<Driver, 'password'>;
-  access_token: string;
+  accessToken: string;
 }
 
 @Injectable()
@@ -115,13 +114,12 @@ export class DriverAuthService {
     const payload: JwtPayload = {
       sub: driver.id,
       email: driver.email,
-      type: 'driver',
     };
-    const access_token = this.jwtService.sign(payload);
+    const accessToken = this.jwtService.sign(payload);
 
     return {
       driver,
-      access_token,
+      accessToken,
     };
   }
 
