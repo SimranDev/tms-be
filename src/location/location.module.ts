@@ -4,9 +4,13 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { LocationGateway } from './location.gateway';
 import { LocationService } from './location.service';
 import { LocationController } from './location.controller';
+import { LocationManagementService } from './location-management.service';
+import { LocationManagementController } from './location-management.controller';
+import { PrismaModule } from '../prisma/prisma.module';
 
 @Module({
   imports: [
+    PrismaModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
@@ -15,8 +19,8 @@ import { LocationController } from './location.controller';
       inject: [ConfigService],
     }),
   ],
-  providers: [LocationGateway, LocationService],
-  controllers: [LocationController],
-  exports: [LocationService, LocationGateway],
+  providers: [LocationGateway, LocationService, LocationManagementService],
+  controllers: [LocationController, LocationManagementController],
+  exports: [LocationService, LocationGateway, LocationManagementService],
 })
 export class LocationModule {}
