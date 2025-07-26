@@ -15,18 +15,20 @@ model User {
   email       String   @unique
   password    String
   createdAt   DateTime @default(now())
-  jobsCreated Job[]    @relation("CreatedJobs")
+  jobsCreated Job[]    @relation("CreatedJobs") // Jobs created by this user
 }
 
 model Customer {
-  id            String   @id @default(cuid())
+  id            String             @id @default(cuid())
   companyName   String
   contactPerson String
   email         String
   phoneNumber   String
-  address       String
-  createdAt     DateTime @default(now())
-  jobs          Job[]
+  addressId     String
+  createdAt     DateTime           @default(now())
+  jobs          Job[] // Jobs assigned to this customer
+  address       Location           @relation(fields: [addressId], references: [id]) // Primary business address
+  locations     CustomerLocation[] // All customer locations (many-to-many)
 }
 
 model Driver {
@@ -40,7 +42,7 @@ model Driver {
   licenseExpiryDate DateTime
   isActive          Boolean  @default(true)
   createdAt         DateTime @default(now())
-  jobs              Job[]
+  jobs              Job[] // Jobs assigned to this driver
 }
 
 model Vehicle {
@@ -53,7 +55,7 @@ model Vehicle {
   registrationExpiry DateTime
   insuranceExpiry    DateTime
   isActive           Boolean     @default(true)
-  jobs               Job[]
+  jobs               Job[] // Jobs using this vehicle
 }
 
 model Container {
@@ -63,7 +65,36 @@ model Container {
   size            ContainerSize
   status          ContainerStatus
   notes           String?
-  jobs            Job[]
+  jobs            Job[] // Jobs transporting this container
+}
+
+model Location {
+  id              String             @id @default(cuid())
+  herePlaceId     String             @unique
+  label           String
+  streetNumber    String
+  streetName      String
+  suburb          String
+  city            String
+  postcode        String
+  countryCode     String
+  latitude        Decimal            @db.Decimal(10, 8)
+  longitude       Decimal            @db.Decimal(11, 8)
+  customers       CustomerLocation[] // Customers associated with this location
+  pickupJobs      Job[]              @relation("PickupLocation") // Jobs picking up from here
+  deliveryJobs    Job[]              @relation("DeliveryLocation") // Jobs delivering to here
+  customerAddress Customer[] // Customers using this as primary address
+}
+
+model CustomerLocation {
+  customerId String
+  locationId String
+  createdAt  DateTime @default(now())
+
+  customer Customer @relation(fields: [customerId], references: [id]) // Reference to customer
+  location Location @relation(fields: [locationId], references: [id]) // Reference to location
+
+  @@id([customerId, locationId]) // Junction table for many-to-many relationship
 }
 
 model Job {
@@ -73,26 +104,25 @@ model Job {
   driverId           String
   vehicleId          String
   status             JobStatus
-  pickupAddress      String
-  pickupLatitude     Float
-  pickupLongitude    Float
-  deliveryAddress    String
-  deliveryLatitude   Float
-  deliveryLongitude  Float
+  pickupLocationId   String
+  deliveryLocationId String
   scheduledPickup    DateTime
   scheduledDelivery  DateTime
   actualPickup       DateTime?
   actualDelivery     DateTime?
   freightDescription String
-  notes              String?
+  instructions       String?
+  customerReference  String?
   createdByUserId    String
   createdAt          DateTime  @default(now())
 
-  customer      Customer  @relation(fields: [customerId], references: [id])
-  container     Container @relation(fields: [containerId], references: [id])
-  driver        Driver    @relation(fields: [driverId], references: [id])
-  vehicle       Vehicle   @relation(fields: [vehicleId], references: [id])
-  createdByUser User      @relation("CreatedJobs", fields: [createdByUserId], references: [id])
+  customer         Customer  @relation(fields: [customerId], references: [id]) // Job belongs to this customer
+  container        Container @relation(fields: [containerId], references: [id]) // Container being transported
+  driver           Driver    @relation(fields: [driverId], references: [id]) // Driver assigned to job
+  vehicle          Vehicle   @relation(fields: [vehicleId], references: [id]) // Vehicle used for transport
+  createdByUser    User      @relation("CreatedJobs", fields: [createdByUserId], references: [id]) // User who created job
+  pickupLocation   Location  @relation("PickupLocation", fields: [pickupLocationId], references: [id]) // Where to pickup
+  deliveryLocation Location  @relation("DeliveryLocation", fields: [deliveryLocationId], references: [id]) // Where to deliver
 }
 
 enum VehicleType {
