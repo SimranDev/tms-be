@@ -18,5 +18,5 @@ export class CreateCustomerDto {
 
   @IsString()
   @IsNotEmpty()
-  address: string;
+  addressId: string; // Changed from address to addressId (Location reference)
 }

@@ -16,6 +16,7 @@ export class CustomerService {
     return this.prisma.customer.findUnique({
       where: { id },
       include: {
+        address: true, // Include primary business address
         jobs: {
           include: {
             driver: {
