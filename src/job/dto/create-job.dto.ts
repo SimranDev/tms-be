@@ -5,7 +5,6 @@ import {
   IsEnum,
   IsOptional,
   IsDateString,
-  IsNumber,
 } from 'class-validator';
 
 export class CreateJobDto {
@@ -30,23 +29,11 @@ export class CreateJobDto {
 
   @IsString()
   @IsNotEmpty()
-  pickupAddress: string;
-
-  @IsNumber()
-  pickupLatitude: number;
-
-  @IsNumber()
-  pickupLongitude: number;
+  pickupLocationId: string; // Changed to location reference
 
   @IsString()
   @IsNotEmpty()
-  deliveryAddress: string;
-
-  @IsNumber()
-  deliveryLatitude: number;
-
-  @IsNumber()
-  deliveryLongitude: number;
+  deliveryLocationId: string; // Changed to location reference
 
   @IsDateString()
   scheduledPickup: string;
@@ -65,6 +52,14 @@ export class CreateJobDto {
   @IsString()
   @IsNotEmpty()
   freightDescription: string;
+
+  @IsString()
+  @IsOptional()
+  instructions?: string; // New field
+
+  @IsString()
+  @IsOptional()
+  customerReference?: string; // New field
 
   @IsString()
   @IsOptional()

@@ -15,5 +15,13 @@ export class UpdateJobStatusDto {
 
   @IsOptional()
   @IsString()
+  instructions?: string;
+
+  @IsOptional()
+  @IsString()
+  customerReference?: string;
+
+  @IsOptional()
+  @IsString()
   notes?: string;
 }

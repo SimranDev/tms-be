@@ -51,6 +51,8 @@ export class JobService {
         container: true,
         driver: true,
         vehicle: true,
+        pickupLocation: true,
+        deliveryLocation: true,
         createdByUser: {
           select: {
             id: true,
@@ -70,6 +72,8 @@ export class JobService {
         container: true,
         driver: true,
         vehicle: true,
+        pickupLocation: true, // Include pickup location details
+        deliveryLocation: true, // Include delivery location details
         createdByUser: {
           select: {
             id: true,
